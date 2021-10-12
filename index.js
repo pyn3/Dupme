@@ -9,7 +9,6 @@ app.use(express.json())
 app.get('/', async (req, res) => {
     await res.json({ "status": res.statusCode, "message": "OK" });
 })
-<<<<<<< HEAD
 
 const httpServer = createServer(app);
 const io = new Server(httpServer);
@@ -18,8 +17,3 @@ io.on("connection", (socket) => {
     console.log("someone connected to server")
 })
 httpServer.listen(port, () => console.log(`Listening on ${port}`))
-=======
-app.listen(port, () => console.log(`Listening on ${port}`))
-
-//testttt
->>>>>>> master
