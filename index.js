@@ -1,7 +1,7 @@
 const express = require('express');
 const { Server } = require('socket.io');
 const { createServer } = require('http');
-
+const { User, Player } = require('./model/client_model.js')
 const app = express();
 const port = 4000;
 app.use(express.json())
@@ -12,8 +12,24 @@ app.get('/', async (req, res) => {
 
 const httpServer = createServer(app);
 const io = new Server(httpServer);
+let playerList = [];
 
 io.on("connection", (socket) => {
     console.log("someone connected to server")
+    const player = new Player()
+    playerList.push()
+    // socket.on("hello", "world");
+    socket.on("disconnect", () => {
+        console.log("someone disconnect");
+    })
+    socket.on("status", (data) => {
+        
+        console.log(data)
+    })
+    socket.on("connection_error", () => {
+        socket.connect();
+        console.log("error")
+    })
+
 })
 httpServer.listen(port, () => console.log(`Listening on ${port}`))
