@@ -13,7 +13,7 @@ app.get('/', async (req, res) => {
 const httpServer = createServer(app);
 const io = new Server(httpServer);
 let playerList = [];
-let pattern = []
+let characters = []
 
 io.on("connection", (socket) => {
     console.log("someone connected to server")
@@ -29,10 +29,12 @@ io.on("connection", (socket) => {
     socket.on("disconnect", () => {
         console.log("someone disconnect");
     })
-    socket.on("status", (data) => {
-        console.log(data)
+    socket.on("status", (obj) => {
+        console.log(obj)
     })
-    socket.on("enterPettern", ()=>{
+
+    //recieving each character from client.
+    socket.on("enterCharacters", (obj)=>{
         
     })
 
