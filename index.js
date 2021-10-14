@@ -13,22 +13,27 @@ app.get('/', async (req, res) => {
 const httpServer = createServer(app);
 const io = new Server(httpServer);
 let playerList = [];
+let pattern = []
 
 io.on("connection", (socket) => {
     console.log("someone connected to server")
-    const player = new Player()
-    playerList.push()
-    // socket.on("hello", "world");
+    const player = new Player(socket.id);
+
+    if (playerList.length < 2){
+        //the number of players are not exceed the limit.
+        playerList.push(player)
+    }else{
+        //the number of players are exceed the limit.
+        socket.emit("playerExceed")
+    }
     socket.on("disconnect", () => {
         console.log("someone disconnect");
     })
     socket.on("status", (data) => {
-        
         console.log(data)
     })
-    socket.on("connection_error", () => {
-        socket.connect();
-        console.log("error")
+    socket.on("enterPettern", ()=>{
+        
     })
 
 })

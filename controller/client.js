@@ -1,3 +1,9 @@
 const socket = io()
 
-socket.emit('connect')
+socket.on("playerExceed", () => {
+    console.log("Player exceeded")
+})
+
+socket.emit("enterPattern", (data) => {
+
+})
