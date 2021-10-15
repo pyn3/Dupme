@@ -11,7 +11,7 @@ app.use(express.static(path.join(__dirname, 'controller')))
 
 app.get('/', async (req, res) => {
     // await res.json({ "status": res.statusCode, "message": "OK" });
-    await res.sendFile(path.join(__dirname, '/test.html'))
+    await res.sendFile(path.join(__dirname, '/view/test.html'))
 })
 
 const httpServer = createServer(app);
@@ -56,6 +56,7 @@ io.on("connection", (socket) => {
     })
 
     socket.on("stop",(obj)=>{
+        //Not finished yet.
         try{
             if(obj.socketId === playerList[0].socketId){
                 playerList[0].isTurn = false;
