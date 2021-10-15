@@ -6,7 +6,6 @@ socket.on("playerExceed", () => {
 })
 
 //sending each character to server and another client.
-
 const enterCharacters = (char) => {
     triggerConsoleServer(socket.id);
     socket.emit("enterCharacters", { character: char, socket: socket.id })

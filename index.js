@@ -18,8 +18,9 @@ const httpServer = createServer(app);
 const io = new Server(httpServer);
 let playerList = [];
 let characters = [];
-let dupCharacter = [];
+
 let nowTurn = 0;
+
 const findSocketId = (array, val) => {
     for (let i = 0; i < array.length; i++) {
         if (array[i].socketId === val) {
@@ -67,6 +68,7 @@ io.on("connection", (socket) => {
     })
 
     //recieving each character from client.
+    //@TODO - checking the player turn unless the block player!
     socket.on("enterCharacters", (obj) => {
         console.log(obj)
         characters.push(obj.character)
