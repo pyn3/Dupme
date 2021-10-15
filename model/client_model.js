@@ -1,8 +1,9 @@
 class Player {
-    constructor(username) {
-        this.username = username;
+    constructor(socketId) {
+        this.username = "";
         this.score = 0;
         this.isTurn = false;
+        this.socketId = socketId;
     }
 }
 
