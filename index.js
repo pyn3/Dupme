@@ -4,8 +4,7 @@ const { createServer } = require('http');
 const { User, Player } = require('./model/client_model.js')
 const path = require('path')
 const app = express();
-const port = 4000;
-
+const port = 8080;
 app.use(express.json())
 app.use(express.static(path.join(__dirname, 'controller')))
 
@@ -18,7 +17,7 @@ const httpServer = createServer(app);
 const io = new Server(httpServer);
 let playerList = [];
 let characters = [];
-
+let dupCharacters = [];
 let nowTurn = 0;
 
 const findSocketId = (array, val) => {
@@ -40,12 +39,21 @@ const swapTurn = () => {
             playerList[0].isTurn = true;
             nowTurn = 0
         }
-        else console.log("cannot check for trun")
+        else console.log("cannot check for turn")
+        characters = []
+        dupCharacters = []
     } else {
         console.log("Player exceeding the limit")
     }
 }
 
+const verifyTurn = () => {
+    if (nowTurn === 0) {
+        return playerList[0]
+    } else if (nowTurn === 1) {
+        return playerList[1]
+    }
+}
 io.on("connection", (socket) => {
     const player = new Player(socket.id);
     if (playerList.length < 2) {
@@ -55,8 +63,8 @@ io.on("connection", (socket) => {
         //the number of players are exceed the limit.
         socket.emit("playerExceed")
     }
-    console.log(playerList)
-    console.log(socket.id, 'connected to server')
+    // console.log(playerList)
+    console.log(playerList[playerList.length - 1], 'has connected to server')
     //set first player to start first.
     playerList[0].isTurn = true;
 
@@ -70,30 +78,20 @@ io.on("connection", (socket) => {
     //recieving each character from client.
     //@TODO - checking the player turn unless the block player!
     socket.on("enterCharacters", (obj) => {
-        console.log(obj)
         characters.push(obj.character)
-        if(!playerList[1].isTurn && playerList[0].isTurn){
+        if (!playerList[1].isTurn && playerList[0].isTurn && socket.id !== playerList[1].socketId) {
+            console.log(obj)
             io.to(playerList[1].socketId).emit('showCharacter', obj)
-        }else if(!playerList[0].isTurn && playerList[1].isTurn){
+        } else if (!playerList[0].isTurn && playerList[1].isTurn && socket.id !== playerList[0].socketId) {
+            console.log(obj)
             io.to(playerList[0].socketId).emit('showCharacter', obj)
+        }else{
+            console.log("Sth")
         }
     })
     socket.on("stop", (obj) => {
         //Not finished yet.
-        try {
-            // if (obj.socketId === playerList[0].socketId) {
-            //     playerList[0].isTurn = false;
-            //     playerList[1].isTurn = true;
-            //     console.log('xxxxxxx')
-            // } else if (obj.socketId === playerList[1].socketId) {
-            //     playerList[1].isTurn = false;
-            //     playerList[0].isTurn = true;
-            //     console.log('dasdasdas')
-            // }
-            swapTurn();
-        } catch (err) {
-            console.log(err)
-        }
+        swapTurn();
     })
 
     socket.on("triggerConsoleServer", (obj) => {
