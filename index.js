@@ -19,7 +19,7 @@ let playerList = [];
 let characters = [];
 let dupCharacters = [];
 let nowTurn = 0;
-
+const MAX_PLAYER = 2;
 const findSocketId = (array, val) => {
     for (let i = 0; i < array.length; i++) {
         if (array[i].socketId === val) {
@@ -29,7 +29,7 @@ const findSocketId = (array, val) => {
     return null;
 }
 const swapTurn = () => {
-    if (playerList.length <= 2) {
+    if (playerList.length <= MAX_PLAYER) {
         if (playerList[0].isTurn) {
             playerList[0].isTurn = false;
             playerList[1].isTurn = true;
@@ -56,7 +56,7 @@ const verifyTurn = () => {
 }
 io.on("connection", (socket) => {
     const player = new Player(socket.id);
-    if (playerList.length < 2) {
+    if (playerList.length < MAX_PLAYER) {
         //the number of players are not exceed the limit.
         playerList.push(player)
     } else {
