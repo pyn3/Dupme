@@ -9,7 +9,6 @@ app.use(express.json())
 app.use(express.static(path.join(__dirname, 'controller')))
 
 app.get('/', async (req, res) => {
-    // await res.json({ "status": res.statusCode, "message": "OK" });
     await res.sendFile(path.join(__dirname, '/view/test.html'))
 })
 
@@ -30,29 +29,16 @@ const findSocketId = (array, val) => {
 }
 const swapTurn = () => {
     if (playerList.length <= MAX_PLAYER) {
-        if (playerList[0].isTurn) {
-            playerList[0].isTurn = false;
-            playerList[1].isTurn = true;
-            nowTurn = 1
-        } else if (playerList[1].isTurn) {
-            playerList[1].isTurn = false;
-            playerList[0].isTurn = true;
-            nowTurn = 0
-        }
-        else console.log("cannot check for turn")
-        characters = []
-        dupCharacters = []
+        playerList[1].isTurn = !playerList[1].isTurn;
+        playerList[0].isTurn = !playerList[0].isTurn;
+        resetCollected()
     } else {
         console.log("Player exceeding the limit")
     }
 }
-
-const verifyTurn = () => {
-    if (nowTurn === 0) {
-        return playerList[0]
-    } else if (nowTurn === 1) {
-        return playerList[1]
-    }
+const resetCollected = () => {
+    characters = [];
+    dupCharacters = [];
 }
 io.on("connection", (socket) => {
     const player = new Player(socket.id);
