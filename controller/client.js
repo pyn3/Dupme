@@ -7,13 +7,29 @@ socket.on("playerExceed", () => {
 
 //sending each character to server and another client.
 const enterCharacters = (char) => {
+    triggerConsoleServer(socket.id);
     socket.emit("enterCharacters", { character: char, socket: socket.id })
-    console.log(socket.id)
 }
 
 const stop = () => {
+    triggerConsoleServer(socket.id);
     socket.emit("stop", { socket: socket.id })
 }
 
+const triggerConsoleServer = (text) => {
+    socket.emit("triggerConsoleServer", { console: text })
+}
+
+socket.on("showCharacter", (obj) => {
+    console.log(obj.character, "showCharacter")
+})
+
+// socket.on("loop", () => {
+//     socket.emit("loop")
+// })
+const reset =()=>{
+    socket.emit("resetGame")
+}
+socket.on("playerInfo", (obj)=>console.log(obj.player))
 // const test = (asd) => { console.log(asd) }
 
