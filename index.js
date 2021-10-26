@@ -58,19 +58,32 @@ const startNewTurn = () => {
     resetCollected();
 
 }
-
+const randomTurn = () => {
+    const randInt =  Math.floor((Math.random() * 10)) % 2
+    console.log(randInt)
+    if (playerList.length >= MAX_PLAYER) {
+        playerList[0].isTurn = false;
+        playerList[1].isTurn = false;
+        if (randInt == 0) {
+            playerList[0].isTurn = true
+            console.log(`Player 0 Turn`)
+        } else {
+            playerList[1].isTurn = true
+            console.log('Player 1 turn')
+        }
+    }
+}
 io.on("connection", (socket) => {
     const player = new Player(socket.id);
     if (playerList.length < MAX_PLAYER) {
-        //the number of players are not exceed the limit.
         playerList.push(player)
     } else {
-        //the number of players are exceed the limit.
         socket.emit("playerExceed")
     }
-    // console.log(playerList)
-    //set first player to start first.
-    playerList[0].isTurn = true;
+
+    if (playerList.length == MAX_PLAYER) {
+        randomTurn()
+    }
     console.log(playerList[playerList.length - 1], 'has connected to server')
 
     socket.on("disconnect", async (obj) => {
@@ -100,7 +113,7 @@ io.on("connection", (socket) => {
 
             }
         } else {
-            console.log("Sth")
+            console.log("Wrong True")
         }
 
     }
@@ -114,12 +127,17 @@ io.on("connection", (socket) => {
     socket.on("triggerConsoleServer", (obj) => {
         console.log(obj.console)
     })
-    socket.on("resetButton", () => {
+    socket.on("resetGame", () => {
         resetCollected();
+        randomTurn();
         playerScore = [];
+        copyTurn = false;
+        numberIn = 0
+        playerScore = [0, 0];
+        console.log("Reset every thing")
     })
+    socket.emit("playerInfo", { player: player })
 
-    // socket.emit('playerInformation, )
 })
 
 io.on("error", (err) => { console.log(err) })
