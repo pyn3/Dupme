@@ -27,6 +27,9 @@ socket.on("showCharacter", (obj) => {
 // socket.on("loop", () => {
 //     socket.emit("loop")
 // })
-
+const resetButton =()=>{
+    socket.emit("resetButton")
+}
+// socket.on("playerInformation", (obj))
 // const test = (asd) => { console.log(asd) }
 
