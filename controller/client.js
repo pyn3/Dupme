@@ -30,6 +30,15 @@ socket.on("showCharacter", (obj) => {
 const reset =()=>{
     socket.emit("resetGame")
 }
+
+const enterUsername = (username) => {
+    console.log(username, "enterUsername")
+    socket.emit("enterUsername",{username: username})
+}
+
+const checkPlayer=() => {
+    socket.emit('checkPlayer')
+}
 socket.on("playerInfo", (obj)=>console.log(obj.player))
 // const test = (asd) => { console.log(asd) }
 

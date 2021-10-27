@@ -41,7 +41,6 @@ const resetCollected = () => {
     // dupCharacters = [];
 }
 const checkCharacter = (character) => {
-
     if (characters[numberIn] === character) {
         if (playerList[0].isTurn) {
             playerScore[0] += 1;
@@ -56,10 +55,9 @@ const checkCharacter = (character) => {
 }
 const startNewTurn = () => {
     resetCollected();
-
 }
 const randomTurn = () => {
-    const randInt =  Math.floor((Math.random() * 10)) % 2
+    const randInt = Math.floor((Math.random() * 10)) % 2
     console.log(randInt)
     if (playerList.length >= MAX_PLAYER) {
         playerList[0].isTurn = false;
@@ -75,12 +73,12 @@ const randomTurn = () => {
 }
 io.on("connection", (socket) => {
     const player = new Player(socket.id);
+
     if (playerList.length < MAX_PLAYER) {
         playerList.push(player)
     } else {
         socket.emit("playerExceed")
     }
-
     if (playerList.length == MAX_PLAYER) {
         randomTurn()
     }
@@ -95,7 +93,7 @@ io.on("connection", (socket) => {
 
     //recieving each character from client.
     socket.on("enterCharacters", (obj) => {
-        if (socket.id !== playerList[1].socketId && playerList[0].isTurn) {
+        if ((socket.id !== playerList[1].socketId) && playerList[0].isTurn) {
             if (copyTurn) {
                 checkCharacter(obj.character)
             } else {
@@ -103,7 +101,7 @@ io.on("connection", (socket) => {
                 characters.push(obj.character)
                 io.to(playerList[1].socketId).emit('showCharacter', obj)
             }
-        } else if (socket.id !== playerList[0].socketId && playerList[1].isTurn) {
+        } else if ((socket.id !== playerList[0].socketId) && playerList[1].isTurn) {
             if (copyTurn) {
                 checkCharacter(obj.character)
             } else {
@@ -113,11 +111,10 @@ io.on("connection", (socket) => {
 
             }
         } else {
-            console.log("Wrong True")
+            console.log("Wrong Button")
         }
 
-    }
-    )
+    })
     socket.on("stop", (obj) => {
         //Not finished yet.
         swapTurn()
@@ -130,14 +127,18 @@ io.on("connection", (socket) => {
     socket.on("resetGame", () => {
         resetCollected();
         randomTurn();
-        playerScore = [];
         copyTurn = false;
         numberIn = 0
         playerScore = [0, 0];
         console.log("Reset every thing")
     })
     socket.emit("playerInfo", { player: player })
-
+    socket.on("enterUsername",(obj)=>{
+        playerList[findSocketId(playerList,socket.id)].username = obj.username;
+    })
+    socket.on("checkPlayer",()=>{
+        console.log(playerList)
+    })
 })
 
 io.on("error", (err) => { console.log(err) })
