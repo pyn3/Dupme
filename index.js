@@ -18,10 +18,9 @@ let playerList = [];
 let copyTurn = false;
 let characters = [];
 let numberIn = 0
-let playerScore = [0, 0];
 const MAX_PLAYER = 2;
 const findSocketId = (array, val) => {
-    for (let i = 0; i < array.length; i++) {
+    for (let i = 0; i < array.length-1; i++) {
         if (array[i].socketId === val) {
             return i
         }
@@ -40,35 +39,37 @@ const resetCollected = () => {
     characters = [];
     // dupCharacters = [];
 }
+
 const checkCharacter = (character) => {
     if (characters[numberIn] === character) {
         if (playerList[0].isTurn) {
-            playerScore[0] += 1;
+            playerList[0].score += 1;
         } else if (playerList[1].isTurn) {
-            playerScore[1] += 1;
+            playerList[1].score += 1;
         }
-        console.log(playerScore)
+        console.log(`player 0 score: ${playerList[0].score}`)
+        console.log(`player 1 score: ${playerList[1].score}`)
         numberIn++;
     } else {
+        if (playerList[0].isTurn) {
+            playerList[0].score -= numberIn;
+        } else if (playerList[1].isTurn) {
+            playerList[1].score -= numberIn;
+        }
+        numberIn = 0;
         console.log("Wrong button.")
     }
 }
-const startNewTurn = () => {
-    resetCollected();
+const startNewRound = () => {
+    resetCollected();  
 }
 const randomTurn = () => {
     const randInt = Math.floor((Math.random() * 10)) % 2
-    console.log(randInt)
     if (playerList.length >= MAX_PLAYER) {
         playerList[0].isTurn = false;
         playerList[1].isTurn = false;
-        if (randInt == 0) {
-            playerList[0].isTurn = true
-            console.log(`Player 0 Turn`)
-        } else {
-            playerList[1].isTurn = true
-            console.log('Player 1 turn')
-        }
+        playerList[randInt].isTurn = true;
+        console.log(`Player ${randInt} turn`)
     }
 }
 io.on("connection", (socket) => {
@@ -91,7 +92,7 @@ io.on("connection", (socket) => {
         console.log(playerList)
     })
 
-    //recieving each character from client.
+    //recieving each character from a client.
     socket.on("enterCharacters", (obj) => {
         if ((socket.id !== playerList[1].socketId) && playerList[0].isTurn) {
             if (copyTurn) {
@@ -108,7 +109,6 @@ io.on("connection", (socket) => {
                 console.log(obj)
                 characters.push(obj.character)
                 io.to(playerList[0].socketId).emit('showCharacter', obj)
-
             }
         } else {
             console.log("Wrong Button")
@@ -129,14 +129,15 @@ io.on("connection", (socket) => {
         randomTurn();
         copyTurn = false;
         numberIn = 0
-        playerScore = [0, 0];
+        playerList[0].score = 0
+        playerList[1].score = 0;
         console.log("Reset every thing")
     })
     socket.emit("playerInfo", { player: player })
-    socket.on("enterUsername",(obj)=>{
-        playerList[findSocketId(playerList,socket.id)].username = obj.username;
+    socket.on("enterUsername", (obj) => {
+        playerList[findSocketId(playerList, socket.id)].username = obj.username;
     })
-    socket.on("checkPlayer",()=>{
+    socket.on("checkPlayer", () => {
         console.log(playerList)
     })
 })
