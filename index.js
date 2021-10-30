@@ -1,7 +1,7 @@
 const express = require('express');
 const { Server } = require('socket.io');
 const { createServer } = require('http');
-const { User, Player } = require('./model/client_model.js')
+const { Player } = require('./model/client_model.js')
 const path = require('path')
 const app = express();
 const port = 8080;
@@ -17,16 +17,29 @@ const io = new Server(httpServer);
 let playerList = [];
 let copyTurn = false;
 let characters = [];
-let numberIn = 0
+let numberIn = 0;
+let nowTurn = 0;
 const MAX_PLAYER = 2;
-const findSocketId = (array, val) => {
-    for (let i = 0; i < array.length-1; i++) {
+const findSocketId = (val, array = playerList) => {
+    for (let i = 0; i < array.length; i++) {
         if (array[i].socketId === val) {
             return i
         }
     }
     return null;
 }
+
+const randomTurn = () => {
+    const randInt = Math.floor((Math.random() * 10)) % 2
+    if (playerList.length >= MAX_PLAYER) {
+        playerList[0].isTurn = false;
+        playerList[1].isTurn = false;
+        playerList[randInt].isTurn = true;
+        nowTurn = randInt;
+        console.log(`Player ${randInt} turn`)
+    }
+}
+
 const swapTurn = () => {
     if (playerList.length <= MAX_PLAYER) {
         playerList[1].isTurn = !playerList[1].isTurn;
@@ -35,20 +48,26 @@ const swapTurn = () => {
         console.log("Player exceeding the limit")
     }
 }
+
+const startNewRound = () => {
+    resetCollected();
+    numberIn = 0;
+    copyTurn = false;
+    console.log("Round has been restarted")
+}
 const resetCollected = () => {
     characters = [];
-    // dupCharacters = [];
+    console.log(characters,"is our stored characters");
 }
 
 const checkCharacter = (character) => {
+    console.log(characters[numberIn],numberIn)
     if (characters[numberIn] === character) {
         if (playerList[0].isTurn) {
             playerList[0].score += 1;
         } else if (playerList[1].isTurn) {
             playerList[1].score += 1;
         }
-        console.log(`player 0 score: ${playerList[0].score}`)
-        console.log(`player 1 score: ${playerList[1].score}`)
         numberIn++;
     } else {
         if (playerList[0].isTurn) {
@@ -59,17 +78,11 @@ const checkCharacter = (character) => {
         numberIn = 0;
         console.log("Wrong button.")
     }
-}
-const startNewRound = () => {
-    resetCollected();  
-}
-const randomTurn = () => {
-    const randInt = Math.floor((Math.random() * 10)) % 2
-    if (playerList.length >= MAX_PLAYER) {
-        playerList[0].isTurn = false;
-        playerList[1].isTurn = false;
-        playerList[randInt].isTurn = true;
-        console.log(`Player ${randInt} turn`)
+    console.log(`player 0 score: ${playerList[0].score}`)
+    console.log(`player 1 score: ${playerList[1].score}`)
+    if(characters.length === numberIn) {
+        startNewRound()
+        console.log('DONE!')
     }
 }
 io.on("connection", (socket) => {
@@ -80,10 +93,10 @@ io.on("connection", (socket) => {
     } else {
         socket.emit("playerExceed")
     }
+    console.log(`${playerList.length} has joined the server`)
     if (playerList.length == MAX_PLAYER) {
         randomTurn()
     }
-    console.log(playerList[playerList.length - 1], 'has connected to server')
 
     socket.on("disconnect", async (obj) => {
         console.log(socket.id, 'disconnect to server');
@@ -92,13 +105,12 @@ io.on("connection", (socket) => {
         console.log(playerList)
     })
 
-    //recieving each character from a client.
     socket.on("enterCharacters", (obj) => {
         if ((socket.id !== playerList[1].socketId) && playerList[0].isTurn) {
             if (copyTurn) {
                 checkCharacter(obj.character)
             } else {
-                console.log(obj)
+                console.log(obj, "as player 0")
                 characters.push(obj.character)
                 io.to(playerList[1].socketId).emit('showCharacter', obj)
             }
@@ -106,12 +118,12 @@ io.on("connection", (socket) => {
             if (copyTurn) {
                 checkCharacter(obj.character)
             } else {
-                console.log(obj)
+                console.log(obj, "as player 1")
                 characters.push(obj.character)
                 io.to(playerList[0].socketId).emit('showCharacter', obj)
             }
         } else {
-            console.log("Wrong Button")
+            console.log("Wrong Turn")
         }
 
     })
@@ -130,15 +142,31 @@ io.on("connection", (socket) => {
         copyTurn = false;
         numberIn = 0
         playerList[0].score = 0
-        playerList[1].score = 0;
-        console.log("Reset every thing")
+
+        console.log('--------------------------------')
+        console.log("Reset following variables:")
+        console.log("    player 0's score: ",playerList[0].score)
+        if(playerList.length === 2){
+            playerList[1].score = 0;
+            console.log("    player 1's score:",playerList[1].score)
+        }
+        console.log("    copyTurn:",copyTurn)
+        console.log("    numberIn:",numberIn)
+        console.log("    turn", nowTurn)
+        console.log("    characters:",characters)
+        console.log('--------------------------------')
     })
     socket.emit("playerInfo", { player: player })
-    socket.on("enterUsername", (obj) => {
-        playerList[findSocketId(playerList, socket.id)].username = obj.username;
+
+    socket.on("enterUsername",  (obj) => {
+        playerList[findSocketId(socket.id)].username = obj.username
+        console.log(`Set username ${playerList[findSocketId(socket.id)].username} as "${obj.username}"`)
     })
+
     socket.on("checkPlayer", () => {
         console.log(playerList)
+        console.log(copyTurn, "copyTurn")
+        socket.emit("status",{status: nowTurn})
     })
 })
 
