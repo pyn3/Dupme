@@ -85,6 +85,8 @@ const checkCharacter = (character) => {
         console.log('DONE!')
     }
 }
+
+
 io.on("connection", (socket) => {
     const player = new Player(socket.id);
 
