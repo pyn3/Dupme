@@ -41,7 +41,7 @@ const randomTurn = () => {
 }
 
 const swapTurn = () => {
-    if (playerList.length <= MAX_PLAYER) {
+    if (playerList.length >= MAX_PLAYER) {
         playerList[1].isTurn = !playerList[1].isTurn;
         playerList[0].isTurn = !playerList[0].isTurn;
     } else {
@@ -82,7 +82,7 @@ const checkCharacter = (character) => {
     console.log(`player 1 score: ${playerList[1].score}`)
     if(characters.length === numberIn) {
         startNewRound()
-        console.log('DONE!')
+        console.log('ROUND HAS DONE!')
     }
 }
 
@@ -96,7 +96,7 @@ io.on("connection", (socket) => {
         socket.emit("playerExceed")
     }
     console.log(`${playerList.length} has joined the server`)
-    if (playerList.length == MAX_PLAYER) {
+    if (playerList.length >= MAX_PLAYER) {
         randomTurn()
     }
 
@@ -127,10 +127,9 @@ io.on("connection", (socket) => {
         } else {
             console.log("Wrong Turn")
         }
-
     })
-    socket.on("stop", (obj) => {
-        //Not finished yet.
+
+    socket.on("stop", () => {
         swapTurn()
         copyTurn = !copyTurn;
     })
@@ -158,18 +157,18 @@ io.on("connection", (socket) => {
         console.log("    characters:",characters)
         console.log('--------------------------------')
     })
-    socket.emit("playerInfo", { player: player })
-
+    
     socket.on("enterUsername",  (obj) => {
         playerList[findSocketId(socket.id)].username = obj.username
         console.log(`Set username ${playerList[findSocketId(socket.id)].username} as "${obj.username}"`)
     })
-
+    
     socket.on("checkPlayer", () => {
         console.log(playerList)
         console.log(copyTurn, "copyTurn")
         socket.emit("status",{status: nowTurn})
     })
+    socket.emit("playerInfo", { player: player })
 })
 
 io.on("error", (err) => { console.log(err) })
