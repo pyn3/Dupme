@@ -218,9 +218,13 @@ io.on("connection", (socket) => {
         }
         // socket.emit("oppData", { oppPlayer: playerList[findSocketId(socket.id) - 1] })
     })
+    let x = 0
     socket.on('setLevel', (obj)=>{
-        level = obj.level
-        socket.broadcast.emit('getLevel',{level: level})
+        if(x===0){
+            level = obj.level
+            socket.broadcast.emit('getLevel',{level: level})
+        }
+        x++
     })
     socket.on("getNumPlayers",()=>{
         socket.emit('something',{something: playerList.length})
