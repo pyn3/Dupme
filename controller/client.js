@@ -39,13 +39,19 @@ const enterUsername = (username) => {
 const checkPlayer = () => {
     socket.emit('checkPlayer')
 }
-socket.on("playerInfo", (obj) => console.log(obj.player))
 socket.on("status", (obj) => {
     console.log({"status": obj.status})
 })
 const trash = () =>{
     socket.emit('trash')
 }
+const setDress = (scraf, glasses) =>{
+    socket.emit("setDress", {scraf: scraf,glasses: glasses})
+}
+socket.on("playerInfo", (obj) => console.log(obj.player))
+socket.on("playersInfo", (obj) => console.log(obj.players))
+const getDress = () => {
 
+    socket.on("oppData", (obj) => console.log(obj.oppPlayer))
+}
 // const test = (asd) => { console.log(asd) }
-

@@ -201,10 +201,22 @@ io.on("connection", (socket) => {
     socket.on("checkPlayer", () => {
         console.log(playerList)
         console.log(copyTurn, "copyTurn")
-        socket.emit("status", { status: nowTurn })
+        socket.emit("playersInfo",{players: playerList})
     })
-    socket.emit("playerInfo", { player: player })
+    socket.emit("playerInfo", { player: playerList })
     socket.on('trash', () => { trash() })
+    socket.on('setDress', (scraf, glasses) =>{
+        playerList[findSocketId(socket.id)].setDress(scraf, glasses)
+    })
+    socket.on("getOppData",()=>{
+        // if(playerList[findSocketId(socket.id)] === playerList[0]){
+        //     socket.emit("oppData",{oppPlayer: playerList[1]})
+        // }else if(playerList[findSocketId(socket.id)] === playerList[1]){
+        //     socket.emit("oppData",{oppPlayer: playerList[0]})
+        // }
+        socket.emit("oppData",{oppPlayer: playerList[findSocketId(socket.id)-1]})
+    })
+
 })
 
 io.on("error", (err) => { console.log(err) })
