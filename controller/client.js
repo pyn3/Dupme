@@ -1,5 +1,5 @@
 const socket = io()
-
+// const socket = io.connect()
 
 socket.on("playerExceed", () => {
     alert("Player exceeded")
@@ -40,6 +40,12 @@ const checkPlayer = () => {
     socket.emit('checkPlayer')
 }
 socket.on("playerInfo", (obj) => console.log(obj.player))
-socket.on("status", (obj) => console.log({"status": obj.status}))
+socket.on("status", (obj) => {
+    console.log({"status": obj.status})
+})
+const trash = () =>{
+    socket.emit('trash')
+}
+
 // const test = (asd) => { console.log(asd) }
 

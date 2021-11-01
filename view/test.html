@@ -1,5 +1,5 @@
 <script src="/socket.io/socket.io.js"></script>
-<script src="client.js" type="text/javascript"></script>
+<script src="/client.js" type="text/javascript"></script>
 <div align="center">
     <button onclick="enterCharacters('a')">a</button>
     <button onclick="enterCharacters('b')">b</button>
@@ -8,6 +8,8 @@
     <button onclick="enterCharacters('e')">e</button>
     <button onclick="enterCharacters('f')">f</button>
     <button onclick="stop()">stop</button>
+    <button onClick="stop()">skips</button>
+    <button onClick="trash()">trash</button>
 </div>
 
 <div align="center">
@@ -15,4 +17,5 @@
     <button onclick="enterUsername('Player 1')">mock username 1</button>
     <button onclick="enterUsername('Player 2')">mock username 2</button>
     <button onclick="checkPlayer()">Check Player</button>
+    
 </div>
