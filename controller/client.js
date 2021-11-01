@@ -27,9 +27,19 @@ socket.on("showCharacter", (obj) => {
 // socket.on("loop", () => {
 //     socket.emit("loop")
 // })
-const reset =()=>{
+const reset = () => {
     socket.emit("resetGame")
 }
-socket.on("playerInfo", (obj)=>console.log(obj.player))
+
+const enterUsername = (username) => {
+    console.log(username, "enterUsername")
+    socket.emit("enterUsername", { username: username })
+}
+
+const checkPlayer = () => {
+    socket.emit('checkPlayer')
+}
+socket.on("playerInfo", (obj) => console.log(obj.player))
+socket.on("status", (obj) => console.log({"status": obj.status}))
 // const test = (asd) => { console.log(asd) }
 
