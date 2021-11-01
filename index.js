@@ -33,6 +33,7 @@ let characters = [];
 let numberIn = 0;
 let nowTurn = 0;
 let count = 0;
+let level = 0;
 const MAX_PLAYER = 2;
 
 const findSocketId = (val, array = playerList) => {
@@ -74,7 +75,7 @@ const resetCollected = () => {
     characters = [];
     console.log(characters, "is our stored characters");
 }
-
+//for checking character and increasing score of that player.
 const checkCharacter = (character) => {
     console.log(characters[numberIn], numberIn)
     if (characters[numberIn] === character) {
@@ -163,7 +164,7 @@ io.on("connection", (socket) => {
         // }
         console.log("stop")
         if (count >= 8) {
-            socket.emit("endGame", { status: "Game Done" })
+            socket.emit("endGame", { status: "DONE" })
         } else {
             count++
         }
@@ -178,7 +179,7 @@ io.on("connection", (socket) => {
         copyTurn = false;
         numberIn = 0
         playerList[0].score = 0
-
+        level = 0
         console.log('--------------------------------')
         console.log("Reset following variables:")
         console.log("    player 0's score: ", playerList[0].score)
@@ -186,6 +187,7 @@ io.on("connection", (socket) => {
             playerList[1].score = 0;
             console.log("    player 1's score:", playerList[1].score)
         }
+        console.log("    level:",level)
         console.log("    copyTurn:", copyTurn)
         console.log("    numberIn:", numberIn)
         console.log("    turn", nowTurn)
@@ -201,22 +203,37 @@ io.on("connection", (socket) => {
     socket.on("checkPlayer", () => {
         console.log(playerList)
         console.log(copyTurn, "copyTurn")
-        socket.emit("playersInfo",{players: playerList})
+        socket.emit("playersInfo", { players: playerList })
     })
     socket.emit("playerInfo", { player: playerList })
     socket.on('trash', () => { trash() })
-    socket.on('setDress', (scraf, glasses) =>{
-        playerList[findSocketId(socket.id)].setDress(scraf, glasses)
+    socket.on('setDress', (toon, scraf, glasses) => {
+        playerList[findSocketId(socket.id)].setDress(toon, scraf, glasses)
     })
-    socket.on("getOppData",()=>{
-        // if(playerList[findSocketId(socket.id)] === playerList[0]){
-        //     socket.emit("oppData",{oppPlayer: playerList[1]})
-        // }else if(playerList[findSocketId(socket.id)] === playerList[1]){
-        //     socket.emit("oppData",{oppPlayer: playerList[0]})
-        // }
-        socket.emit("oppData",{oppPlayer: playerList[findSocketId(socket.id)-1]})
+    socket.on("getOppData", () => {
+        if(playerList[findSocketId(socket.id)] === playerList[0]){
+            socket.emit("oppData",{oppPlayer: playerList[1]})
+        }else if(playerList[findSocketId(socket.id)] === playerList[1]){
+            socket.emit("oppData",{oppPlayer: playerList[0]})
+        }
+        // socket.emit("oppData", { oppPlayer: playerList[findSocketId(socket.id) - 1] })
     })
-
+    socket.on('setLevel', (obj)=>{
+        level = obj.level
+        socket.broadcast.emit('getLevel',{level: level})
+    })
+    socket.on("getNumPlayers",()=>{
+        socket.emit('something',{something: playerList.length})
+    })
+    socket.on("getWinner",()=>{
+        if(playerList[0].score > playerList[1].score){
+            socket.emit('something', {something: playerList[0]})
+        }        else if(playerList[0].score < playerList[1].score){
+            socket.emit('something', {something: playerList[1]})
+        } else if(playerList[0].score === playerList[1].score){
+            socket.emit('something', {something: "tied"})
+        }
+    })
 })
 
 io.on("error", (err) => { console.log(err) })

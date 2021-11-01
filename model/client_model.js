@@ -4,11 +4,11 @@ class Player {
         this.username = "";
         this.score = 0;
         this.isTurn = false;
-        this.dress = [false, false]; //default dress
-        //[scraf, glasses]
+        this.dress = [0,false, false]; //default dress
+                //[toon,scraf, glasses]
     }
-    setDress(scraf, glasses) {
-        this.dress = [scraf, glasses]
+    setDress(toon,scraf, glasses) {
+        this.dress = [toon,scraf, glasses]
     }
     getDress() { return this.dress }
 }
