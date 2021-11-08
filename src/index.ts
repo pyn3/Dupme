@@ -76,9 +76,9 @@ const checkCharacter = (character: string) => {
     console.log(characters[numberIn], numberIn)
     if (characters[numberIn] === character) {
         if (playerList[0].getTurn()) {
-            playerList[0].score += 50;
+            playerList[0].increaseScore(50);
         } else if (playerList[1].getTurn()) {
-            playerList[1].score += 50;
+            playerList[1].increaseScore(50);
         }
         numberIn++;
     } else {
