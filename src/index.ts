@@ -44,9 +44,9 @@ const findSocketId = (val: string, array = playerList) => {
 const randomTurn = () => {
     const randInt = Math.floor((Math.random() * 10)) % 2
     if (playerList.length >= MAX_PLAYER) {
-        playerList[0].isTurn = false;
-        playerList[1].isTurn = false;
-        playerList[randInt].isTurn = true;
+        playerList[0].setTurn(false);
+        playerList[1].setTurn(false);
+        playerList[randInt].setTurn(true);
         nowTurn = randInt;
         console.log(`Player ${randInt} turn`)
     }
@@ -54,8 +54,8 @@ const randomTurn = () => {
 
 const swapTurn = () => {
     if (playerList.length >= MAX_PLAYER) {
-        playerList[1].isTurn = !playerList[1].isTurn;
-        playerList[0].isTurn = !playerList[0].isTurn;
+        playerList[1].swapTurn();
+        playerList[0].swapTurn();
     } else {
         console.log("Player exceeding the limit")
     }
@@ -75,17 +75,17 @@ const resetCollected = () => {
 const checkCharacter = (character: string) => {
     console.log(characters[numberIn], numberIn)
     if (characters[numberIn] === character) {
-        if (playerList[0].isTurn) {
+        if (playerList[0].getTurn()) {
             playerList[0].score += 50;
-        } else if (playerList[1].isTurn) {
+        } else if (playerList[1].getTurn()) {
             playerList[1].score += 50;
         }
         numberIn++;
     } else {
-        if (playerList[0].isTurn) {
-            playerList[0].score -= numberIn * 50;
-        } else if (playerList[1].isTurn) {
-            playerList[1].score -= numberIn * 50;
+        if (playerList[0].getTurn()) {
+            playerList[0].decreaseScore(numberIn * 50);
+        } else if (playerList[1].getTurn()) {
+            playerList[1].decreaseScore(numberIn * 50);
         }
         numberIn = 0;
         console.log("Wrong button.")
@@ -100,9 +100,9 @@ const checkCharacter = (character: string) => {
 
 const trash = (socketId: string) => {
     if (playerList.length >= 2) {
-        if (playerList[0].isTurn && playerList[1].socketId !== socketId) {
+        if (playerList[0].getTurn() && playerList[1].socketId !== socketId) {
             playerList[0].score -= 50;
-        } else if (playerList[1].isTurn && playerList[0].socketId !== socketId) {
+        } else if (playerList[1].getTurn() && playerList[0].socketId !== socketId) {
             playerList[1].score -= 50;
         }
         numberIn--;
@@ -156,7 +156,7 @@ io.on("connection", async (socket: Socket) => {
     })
 
     socket.on("enterCharacters", (obj) => {
-        if ((socket.id !== playerList[1].socketId) && playerList[0].isTurn) {
+        if ((socket.id !== playerList[1].socketId) && playerList[0].getTurn()) {
             if (copyTurn) {
                 checkCharacter(obj.character)
             } else {
@@ -164,7 +164,7 @@ io.on("connection", async (socket: Socket) => {
                 characters.push(obj.character)
                 io.to(playerList[1].socketId).emit('showCharacter', obj)
             }
-        } else if ((socket.id !== playerList[0].socketId) && playerList[1].isTurn) {
+        } else if ((socket.id !== playerList[0].socketId) && playerList[1].getTurn()) {
             if (copyTurn) {
                 checkCharacter(obj.character)
             } else {
