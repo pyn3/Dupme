@@ -1,21 +1,30 @@
 import { Server, Socket } from "socket.io";
 import { createServer } from "http"
 import express from "express"
+import { Response, Request } from "express"
 import path from "path";
-const { Player } = require('./model/client_model.js')
+import { Player } from "./model/client_model"
 const app = express();
-const port = 8080;
+const port = 8090;
 app.use(express.json())
 app.use(express.static(path.join(__dirname, 'controller')))
 
 
-app.get('/', async (req, res) => {
+app.get('/', async (req: Request, res: Response) => {
     await res.sendFile(path.join(__dirname, '/view/test.html'))
 })
 
+app.get('/status', async (req: Request, res: Response) => {
+    res.json({
+        NumberPlayer: playerList.length - 1,
+    })
+})
+enum status {
+    done = "DONE"
+}
 const httpServer = createServer(app);
 const io = new Server(httpServer, { cors: { origin: '*' } });
-let playerList: any = [];
+let playerList: Player[] = [];
 let characters: string[] = [];
 let copyTurn: boolean = false;
 let numberIn: number = 0;
@@ -91,21 +100,41 @@ const checkCharacter = (character: string) => {
 
 const trash = (socketId: string) => {
     if (playerList.length >= 2) {
-        if (playerList[0].isTurn && playerList[1].sockeId !== socketId) {
+        if (playerList[0].isTurn && playerList[1].socketId !== socketId) {
             playerList[0].score -= 50;
-        } else if (playerList[1].isTurn && playerList[0].sockeId !== socketId) {
+        } else if (playerList[1].isTurn && playerList[0].socketId !== socketId) {
             playerList[1].score -= 50;
         }
         numberIn--;
         console.warn('Trash~!')
         console.log(`player 0 score: ${playerList[0].score}`)
         console.log(`player 1 score: ${playerList[1].score}`)
-    }else{
+    } else {
         console.warn("Player <= 2")
     }
 }
-
-io.on("connection", (socket: Socket) => {
+const resetAll = () => {
+    resetCollected();
+    randomTurn();
+    copyTurn = false;
+    numberIn = 0
+    playerList[0].score = 0
+    level = 0
+    console.log('--------------------------------')
+    console.log("Reset following variables:")
+    console.log("    player 0's score: ", playerList[0].score)
+    if (playerList.length === 2) {
+        playerList[1].score = 0;
+        console.log("    player 1's score:", playerList[1].score)
+    }
+    console.log("    level:", level)
+    console.log("    copyTurn:", copyTurn)
+    console.log("    numberIn:", numberIn)
+    console.log("    turn", nowTurn)
+    console.log("    characters:", characters)
+    console.log('--------------------------------')
+}
+io.on("connection", async (socket: Socket) => {
     const player = new Player(socket.id);
 
     if (playerList.length < MAX_PLAYER) {
@@ -121,8 +150,8 @@ io.on("connection", (socket: Socket) => {
 
     socket.on("disconnect", async () => {
         console.log(socket.id, 'disconnect to server');
-        const index = await findSocketId(playerList, socket.id)
-        playerList.splice(index, 1)
+        const index = await findSocketId(socket.id)
+        playerList.splice(index!, 1)
         console.log(playerList)
     })
 
@@ -150,12 +179,9 @@ io.on("connection", (socket: Socket) => {
     socket.on("stop", () => {
         swapTurn()
         copyTurn = !copyTurn;
-        // if (!copyTurn) {
-        //     startNewRound();
-        // }
         console.log("stop")
         if (count >= 8) {
-            socket.emit("endGame", { status: "DONE" })
+            socket.emit("endGame", { status: status.done })
         } else {
             count++
         }
@@ -186,9 +212,9 @@ io.on("connection", (socket: Socket) => {
         console.log('--------------------------------')
     })
 
-    socket.on("enterUsername", (obj) => {
-        playerList[findSocketId(socket.id)!].username = obj.username
-        console.log(`Set username ${playerList[findSocketId(socket.id)!].username} as "${obj.username}"`)
+    socket.on("enterUsername", async (username) => {
+        playerList[findSocketId(socket.id)!].username = username
+        await console.log(`"${username}"`)
     })
 
     socket.on("checkPlayer", () => {
