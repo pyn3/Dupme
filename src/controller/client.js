@@ -30,7 +30,7 @@ const reset = () => {
 
 const enterUsername = (username) => {
     console.log(username, "enterUsername")
-    socket.emit("enterUsername", { username: username })
+    socket.emit("enterUsername", username)
 }
 
 const checkPlayer = () => {

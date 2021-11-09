@@ -16,26 +16,45 @@ class Player {
     setDress(toon: number, scraf: boolean, glasses: boolean) {
         this.dress = [toon, scraf, glasses]
     }
-    getDress():[number, boolean, boolean] {
+    getDress(): [number, boolean, boolean] {
         return this.dress
     }
-    increaseScore(score: number){
+    increaseScore(score: number) {
         this.score += score
     }
-    decreaseScore(score: number){
+    decreaseScore(score: number) {
         this.score -= score
     }
-    getScore():number{
+    setScore(score: number) {
+        this.score = score
+    }
+    getScore(): number {
         return this.score;
     }
     getTurn(): boolean {
         return this.isTurn
     }
-    setTurn(turn: boolean){
+    setTurn(turn: boolean) {
         this.isTurn = turn
     }
-    swapTurn(){
+    swapTurn() {
         this.isTurn = !this.isTurn;
+    }
+    resetPlayer(){
+        this.username = "";
+        this.score = 0;
+        this.isTurn = false;
+        this.dress = [0, false, false]
+    }
+    setUsername(username: string):string{
+        this.username = username;
+        return this.username, this.socketId;
+    }
+    getUsername(){
+        return this.username;
+    }
+    getSocketId(){
+        return this.socketId;
     }
 }
 

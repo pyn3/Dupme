@@ -4,6 +4,11 @@ import express from "express"
 import { Response, Request } from "express"
 import path from "path";
 import { Player } from "./model/client_model"
+
+//OOP refactor
+import { PlayerList } from "./model/player_list"
+import { Game } from "./model/game"
+//
 const app = express();
 const port = 8090;
 app.use(express.json())
@@ -15,8 +20,12 @@ app.get('/', async (req: Request, res: Response) => {
 })
 
 app.get('/status', async (req: Request, res: Response) => {
+    res.setHeader('Access-Control-Allow-Origin', '*');
+    res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS, PUT, PATCH, DELETE'); // If needed
+    res.setHeader('Access-Control-Allow-Headers', 'X-Requested-With,content-type');
+    res.setHeader('Access-Control-Allow-Credentials', 'true');
     res.json({
-        NumberPlayer: playerList.length - 1,
+        NumberPlayer: playerList.length,
     })
 })
 enum status {
@@ -134,56 +143,49 @@ const resetAll = () => {
     console.log("    characters:", characters)
     console.log('--------------------------------')
 }
-io.on("connection", async (socket: Socket) => {
-    const player = new Player(socket.id);
 
+//oop refactor
+const game = new Game();
+//
+io.on("connection", async (socket: Socket) => {
+    
     if (playerList.length < MAX_PLAYER) {
-        playerList.push(player)
+        const player = new Player(socket.id);
+        await game.addPlayer(player)
     } else {
         socket.emit("playerExceed")
     }
-    console.log(`${playerList.length} has joined the server`)
-    console.log(`Players now online: ${playerList.length}`)
-    if (playerList.length >= MAX_PLAYER) {
-        randomTurn()
+    if (game.getPlayerNumber() >= MAX_PLAYER) {
+        game.randomTurn()
     }
 
     socket.on("disconnect", async () => {
         console.log(socket.id, 'disconnect to server');
-        const index = await findSocketId(socket.id)
-        playerList.splice(index!, 1)
-        console.log(playerList)
+        game.disconnect(socket.id);
     })
 
     socket.on("enterCharacters", (obj) => {
-        if ((socket.id !== playerList[1].socketId) && playerList[0].getTurn()) {
-            if (copyTurn) {
-                checkCharacter(obj.character)
-            } else {
-                console.log(obj, "as player 0")
-                characters.push(obj.character)
-                io.to(playerList[1].socketId).emit('showCharacter', obj)
-            }
-        } else if ((socket.id !== playerList[0].socketId) && playerList[1].getTurn()) {
-            if (copyTurn) {
-                checkCharacter(obj.character)
-            } else {
-                console.log(obj, "as player 1")
-                characters.push(obj.character)
-                io.to(playerList[0].socketId).emit('showCharacter', obj)
-            }
-        } else {
-            console.log("Wrong Turn")
+        //oop refactor
+        if (game.getCopyTurn()) {
+            game.verifyCharacter(socket.id, obj.character)
+        } else if (game.checkTurnSender(socket.id)) {
+            game.addCharacter(socket.id, obj.character)
+            const opp = game.getOpp(socket.id)!.getSocketId()
+            if (opp != socket.id) io.to(opp).emit("showCharacter", obj)
         }
     })
     socket.on("stop", () => {
-        swapTurn()
-        copyTurn = !copyTurn;
-        console.log("stop")
-        if (count >= 8) {
-            socket.emit("endGame", { status: status.done })
-        } else {
-            count++
+        if (game.checkTurnSender(socket.id)) {
+            game.swapCopyTurn()
+            game.swapTurn()
+            console.log("stop")
+            if (count >= 8) {
+                socket.emit("endGame", { status: status.done })
+            } else {
+                count++
+            }
+        }else{
+            console.warn("wrong turn!")
         }
     })
 
@@ -191,49 +193,28 @@ io.on("connection", async (socket: Socket) => {
         console.log(obj.console)
     })
     socket.on("resetGame", () => {
-        resetCollected();
-        randomTurn();
-        copyTurn = false;
-        numberIn = 0
-        playerList[0].score = 0
-        level = 0
-        console.log('--------------------------------')
-        console.log("Reset following variables:")
-        console.log("    player 0's score: ", playerList[0].score)
-        if (playerList.length === 2) {
-            playerList[1].score = 0;
-            console.log("    player 1's score:", playerList[1].score)
-        }
-        console.log("    level:", level)
-        console.log("    copyTurn:", copyTurn)
-        console.log("    numberIn:", numberIn)
-        console.log("    turn", nowTurn)
-        console.log("    characters:", characters)
-        console.log('--------------------------------')
+        game.resetAll()
     })
 
     socket.on("enterUsername", async (username) => {
-        playerList[findSocketId(socket.id)!].username = username
-        await console.log(`"${username}"`)
+        game.setUsername(socket.id, username)
     })
 
     socket.on("checkPlayer", () => {
-        console.log(playerList)
-        console.log(copyTurn, "copyTurn")
-        socket.emit("playersInfo", { players: playerList })
+        console.log(game.allPlayers)
+        console.log(game.characters)
+        console.log(game.iterator)
+        console.log("round",count)
     })
     socket.emit("playerInfo", { player: playerList })
-    socket.on('trash', () => { trash(socket.id) })
+    socket.on('trash', () => {
+        game.trash(socket.id)
+     })
     socket.on('setDress', (toon, scraf, glasses) => {
         playerList[findSocketId(socket.id)!].setDress(toon, scraf, glasses)
     })
     socket.on("getOppData", () => {
-        if (playerList[findSocketId(socket.id)!] === playerList[0]) {
-            socket.emit("oppData", { oppPlayer: playerList[1] })
-        } else if (playerList[findSocketId(socket.id)!] === playerList[1]) {
-            socket.emit("oppData", { oppPlayer: playerList[0] })
-        }
-        // socket.emit("oppData", { oppPlayer: playerList[findSocketId(socket.id) - 1] })
+        socket.emit("oppData", { oppPlayer: game.getOpp(socket.id) })
     })
     let x = 0
     socket.on('setLevel', (obj) => {
@@ -247,13 +228,7 @@ io.on("connection", async (socket: Socket) => {
         socket.emit('something', { something: playerList.length })
     })
     socket.on("getWinner", () => {
-        if (playerList[0].score > playerList[1].score) {
-            socket.emit('something', { something: playerList[0] })
-        } else if (playerList[0].score < playerList[1].score) {
-            socket.emit('something', { something: playerList[1] })
-        } else if (playerList[0].score === playerList[1].score) {
-            socket.emit('something', { something: "tied" })
-        }
+        socket.emit('something', playerList.find(p => p.getScore() === Math.max(playerList[0].getScore(), playerList[1].getScore())))
     })
 })
 
