@@ -3,6 +3,7 @@ import { createServer } from "http"
 import express from "express"
 import { Response, Request } from "express"
 import path from "path";
+import { MAX_PLAYER } from "./model/game";
 import { Player } from "./model/client_model"
 
 //OOP refactor
@@ -34,13 +35,8 @@ enum status {
 const httpServer = createServer(app);
 const io = new Server(httpServer, { cors: { origin: '*' } });
 let playerList: Player[] = [];
-let characters: string[] = [];
-let copyTurn: boolean = false;
-let numberIn: number = 0;
-let nowTurn: number = 0;
 let count: number = 0;
 let level: number = 0;
-const MAX_PLAYER: number = 2;
 
 const findSocketId = (val: string, array = playerList) => {
     for (let i = 0; i < array.length; i++) {
@@ -52,7 +48,7 @@ const findSocketId = (val: string, array = playerList) => {
 const game = new Game();
 io.on("connection", async (socket: Socket) => {
 
-    if (playerList.length < MAX_PLAYER) {
+    if (playerList.length < MAX_PLAYER+1) {
         const player = new Player(socket.id);
         await game.addPlayer(player)
     } else {
