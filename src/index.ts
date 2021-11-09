@@ -49,106 +49,9 @@ const findSocketId = (val: string, array = playerList) => {
         }
     }
 }
-
-const randomTurn = () => {
-    const randInt = Math.floor((Math.random() * 10)) % 2
-    if (playerList.length >= MAX_PLAYER) {
-        playerList[0].setTurn(false);
-        playerList[1].setTurn(false);
-        playerList[randInt].setTurn(true);
-        nowTurn = randInt;
-        console.log(`Player ${randInt} turn`)
-    }
-}
-
-const swapTurn = () => {
-    if (playerList.length >= MAX_PLAYER) {
-        playerList[1].swapTurn();
-        playerList[0].swapTurn();
-    } else {
-        console.log("Player exceeding the limit")
-    }
-}
-
-const startNewRound = () => {
-    resetCollected();
-    numberIn = 0;
-    copyTurn = false;
-    console.log("Round has been restarted")
-}
-const resetCollected = () => {
-    characters = [];
-    console.log(characters, "is our stored characters");
-}
-//for checking character and increasing score of that player.
-const checkCharacter = (character: string) => {
-    console.log(characters[numberIn], numberIn)
-    if (characters[numberIn] === character) {
-        if (playerList[0].getTurn()) {
-            playerList[0].increaseScore(50);
-        } else if (playerList[1].getTurn()) {
-            playerList[1].increaseScore(50);
-        }
-        numberIn++;
-    } else {
-        if (playerList[0].getTurn()) {
-            playerList[0].decreaseScore(numberIn * 50);
-        } else if (playerList[1].getTurn()) {
-            playerList[1].decreaseScore(numberIn * 50);
-        }
-        numberIn = 0;
-        console.log("Wrong button.")
-    }
-    console.log(`player 0 score: ${playerList[0].score}`)
-    console.log(`player 1 score: ${playerList[1].score}`)
-    if (characters.length === numberIn) {
-        startNewRound()
-        console.log('ROUND HAS DONE!')
-    }
-}
-
-const trash = (socketId: string) => {
-    if (playerList.length >= 2) {
-        if (playerList[0].getTurn() && playerList[1].socketId !== socketId) {
-            playerList[0].score -= 50;
-        } else if (playerList[1].getTurn() && playerList[0].socketId !== socketId) {
-            playerList[1].score -= 50;
-        }
-        numberIn--;
-        console.warn('Trash~!')
-        console.log(`player 0 score: ${playerList[0].score}`)
-        console.log(`player 1 score: ${playerList[1].score}`)
-    } else {
-        console.warn("Player <= 2")
-    }
-}
-const resetAll = () => {
-    resetCollected();
-    randomTurn();
-    copyTurn = false;
-    numberIn = 0
-    playerList[0].score = 0
-    level = 0
-    console.log('--------------------------------')
-    console.log("Reset following variables:")
-    console.log("    player 0's score: ", playerList[0].score)
-    if (playerList.length === 2) {
-        playerList[1].score = 0;
-        console.log("    player 1's score:", playerList[1].score)
-    }
-    console.log("    level:", level)
-    console.log("    copyTurn:", copyTurn)
-    console.log("    numberIn:", numberIn)
-    console.log("    turn", nowTurn)
-    console.log("    characters:", characters)
-    console.log('--------------------------------')
-}
-
-//oop refactor
 const game = new Game();
-//
 io.on("connection", async (socket: Socket) => {
-    
+
     if (playerList.length < MAX_PLAYER) {
         const player = new Player(socket.id);
         await game.addPlayer(player)
@@ -211,7 +114,7 @@ io.on("connection", async (socket: Socket) => {
         game.trash(socket.id)
      })
     socket.on('setDress', (toon, scraf, glasses) => {
-        playerList[findSocketId(socket.id)!].setDress(toon, scraf, glasses)
+        game.allPlayers.getPlayerById(socket.id).setDress(toon, scraf, glasses)
     })
     socket.on("getOppData", () => {
         socket.emit("oppData", { oppPlayer: game.getOpp(socket.id) })
